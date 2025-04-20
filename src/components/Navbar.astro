@@ -1,0 +1,18 @@
+---
+
+import light_mode from "../assets/light_mode.svg"
+import dark_mode from "../assets/dark_mode.svg"
+
+---
+
+<header class="flex items-center justify-end gap-10">
+    <a href="" class="underline text-base font-semibold text-black dark:text-white">Book</a>
+    <button class="toggleTheme cursor-pointer dark:hover:bg-gray-800 hover:bg-gray-200 p-2 rounded-full">
+        <span class="toggleTheme-icon hidden text-white w-[27px] aspect-square" id="light_mode">
+            <img src={ light_mode.src } alt="">
+        </span>
+        <span class="toggleTheme-icon hidden text-black w-[27px] aspect-square" id="dark_mode">
+            <img src={ dark_mode.src } alt="">
+        </span>
+    </button>
+</header>

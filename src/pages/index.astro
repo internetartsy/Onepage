@@ -1,12 +1,32 @@
 ---
-import Welcome from '../components/Welcome.astro';
+
 import Layout from '../layouts/Layout.astro';
-import "../styles/global.css"
-// Welcome to Astro! Wondering what to do next? Check out the Astro documentation at https://docs.astro.build
-// Don't want to use any of this? Delete everything in this file, the `assets`, `components`, and `layouts` directories, and start fresh.
+import Navbar from "../components/Navbar.astro";
+
 ---
-<!--
 <Layout>
-	<Welcome />
-</Layout> -->
-<h1 class="bg-red-500">hello world</h1>
+	<Navbar />
+	<main class="mt-7 lg:mt-15">
+		<h1 class="text-4xl md:text-5xl lg:text-6xl font-bold text-black dark:text-white mb-7 lg:mb-10">Harish<br />
+			<span class="font-normal text-3xl md:text-4xl lg:text-5xl text-gray-700 dark:text-gray-300 font-eb-garamond italic">Narrator | Performance Marketer</span>
+		</h1>
+		<div class="mb-7 lg:mb-10 font-light">
+			<p class="text-base/relaxed md:text-lg/relaxed lg:text-xl/relaxed mb-3 lg:mb-5">
+				Content Tech Expert who helps brands turn ideas into stories that sell. I blend narrative strategy with cutting edge content technology to craft digital content that performs across platforms. From building content systems that communicate for you to training AI to write in your brand’s voice, I design intelligent solutions that scale. Whether you’re struggling with content production, looking to implement AI writing tools, or need seamless integration of marketing software
+			</p>
+			<p class="text-base/relaxed md:text-lg/relaxed lg:text-xl/relaxed mb-3 lg:mb-5">
+				I’ll help you create content that not only resonates but drives results
+			</p>
+			<p class="text-base/relaxed md:text-lg/relaxed lg:text-xl/relaxed">
+				Let’s build the future of your content, together.
+			</p>
+		</div>
+		<div class="text-base md:text-lg lg:text-xl flex gap-7 text-blue-700 dark:text-blue-500">
+			<a href="">@X</a>
+			<a href="">Bluesky</a>
+			<a href="">Instagram</a>
+			<a href="">LinkedIn</a>
+		</div>
+	</main>
+
+</Layout>
