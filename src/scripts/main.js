@@ -34,5 +34,4 @@ document.addEventListener("DOMContentLoaded", function(event) {
         localStorage.setItem("theme", currentTheme);
     }
     setTheme(currentTheme)
-    console.log(currentTheme)
 });
