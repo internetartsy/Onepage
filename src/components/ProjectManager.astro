@@ -98,131 +98,226 @@ const { category, title } = Astro.props;
         <!-- Projects will be injected here -->
         <div class="text-gray-500 italic">Loading projects...</div>
     </div>
-</div>
 
-<script>
-    // Client-side logic for persistence
-    class ProjectManager {
-        category: string;
-        storageKey: string;
-        projects: any[];
+    <!-- Modal/Lightbox (Moved outside gallery to prevent overwrite) -->
+    <div
+        id="project-modal"
+        class="fixed inset-0 z-50 hidden flex items-center justify-center bg-black/80 p-4 transition-opacity duration-300"
+    >
+        <div
+            class="bg-white dark:bg-zinc-900 w-full max-w-5xl rounded-lg overflow-hidden shadow-2xl relative flex flex-col max-h-[90vh]"
+        >
+            <button
+                id="close-modal"
+                class="absolute top-4 right-4 z-10 bg-black/50 hover:bg-black/70 text-white rounded-full p-2 transition"
+            >
+                <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-6 w-6"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                >
+                    <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M6 18L18 6M6 6l12 12"></path>
+                </svg>
+            </button>
+            <div
+                class="flex-grow bg-black flex items-center justify-center p-2 lg:p-10 overflow-hidden"
+            >
+                <!-- Image/Video Container -->
+                <div
+                    id="modal-media"
+                    class="w-full h-full flex items-center justify-center"
+                >
+                </div>
+            </div>
+            <div
+                class="p-6 lg:p-8 overflow-y-auto bg-white dark:bg-zinc-900 border-t border-gray-200 dark:border-zinc-800"
+            >
+                <p
+                    id="modal-description"
+                    class="text-lg text-gray-800 dark:text-gray-200 whitespace-pre-wrap leading-relaxed"
+                >
+                </p>
+            </div>
+        </div>
+    </div>
 
-        constructor(el: Element) {
-            this.category = el.getAttribute("data-category") || "default";
-            this.storageKey = `portfolio_projects_${this.category}`;
-            this.projects = JSON.parse(
-                localStorage.getItem(this.storageKey) || "[]",
-            );
+    <script>
+        // Client-side logic for persistence
+        class ProjectManager {
+            category: string;
+            storageKey: string;
+            projects: any[];
 
-            this.initUI(el);
-            this.render();
-        }
+            constructor(el: Element) {
+                this.category = el.getAttribute("data-category") || "default";
+                this.storageKey = `portfolio_projects_${this.category}`;
+                this.projects = JSON.parse(
+                    localStorage.getItem(this.storageKey) || "[]",
+                );
 
-        initUI(el: Element) {
-            const uploadBtn = el.querySelector("#toggle-upload");
-            const deleteBtn = el.querySelector("#toggle-delete");
-            const uploadSection = el.querySelector("#upload-section");
-            const deleteSection = el.querySelector("#delete-section");
-            const uploadForm = el.querySelector("#upload-form");
-
-            // Toggles
-            uploadBtn?.addEventListener("click", () => {
-                uploadSection?.classList.toggle("hidden");
-                deleteSection?.classList.add("hidden");
-            });
-
-            deleteBtn?.addEventListener("click", () => {
-                deleteSection?.classList.toggle("hidden");
-                uploadSection?.classList.add("hidden");
-                this.renderDeleteList(el);
-            });
-
-            // Submit
-            uploadForm?.addEventListener("submit", (e) => {
-                e.preventDefault();
-                const formData = new FormData(e.target as HTMLFormElement);
-                const newProject = {
-                    id: Date.now().toString(),
-                    url: formData.get("url"),
-                    type: formData.get("type"),
-                    description: formData.get("description"),
-                    timestamp: new Date().toISOString(),
-                };
-
-                this.projects.unshift(newProject);
-                this.save();
+                this.initUI(el);
                 this.render();
-                (e.target as HTMLFormElement).reset();
-                uploadSection?.classList.add("hidden");
-            });
-        }
+            }
 
-        save() {
-            localStorage.setItem(
-                this.storageKey,
-                JSON.stringify(this.projects),
-            );
-        }
+            initUI(el: Element) {
+                console.log(
+                    "Initializing ProjectManager UI for:",
+                    this.category,
+                );
+                const uploadBtn = el.querySelector("#toggle-upload");
+                const deleteBtn = el.querySelector("#toggle-delete");
+                const uploadSection = el.querySelector("#upload-section");
+                const deleteSection = el.querySelector("#delete-section");
+                const uploadForm = el.querySelector("#upload-form");
 
-        delete(id: string) {
-            this.projects = this.projects.filter((p) => p.id !== id);
-            this.save();
-            this.render();
-            // Re-render delete list if visible, but simple render() handles gallery
-            const deleteSection = document.querySelector(
-                `div[data-category="${this.category}"] #delete-section`,
-            );
-            if (!deleteSection?.classList.contains("hidden")) {
-                this.renderDeleteList(
-                    document.querySelector(
-                        `div[data-category="${this.category}"]`,
-                    )!,
+                // Modal elements
+                const modal = el.querySelector("#project-modal");
+                const closeBtn = el.querySelector("#close-modal");
+
+                // Toggles
+                uploadBtn?.addEventListener("click", () => {
+                    uploadSection?.classList.toggle("hidden");
+                    deleteSection?.classList.add("hidden");
+                });
+
+                deleteBtn?.addEventListener("click", () => {
+                    deleteSection?.classList.toggle("hidden");
+                    uploadSection?.classList.add("hidden");
+                    this.renderDeleteList(el);
+                });
+
+                // Close Modal
+                closeBtn?.addEventListener("click", () => {
+                    modal?.classList.add("hidden");
+                });
+                modal?.addEventListener("click", (e) => {
+                    if (e.target === modal) modal.classList.add("hidden");
+                });
+
+                // Submit
+                uploadForm?.addEventListener("submit", (e) => {
+                    e.preventDefault();
+                    const formData = new FormData(e.target as HTMLFormElement);
+                    const newProject = {
+                        id: Date.now().toString(),
+                        url: formData.get("url"),
+                        type: formData.get("type"),
+                        description: formData.get("description"),
+                        timestamp: new Date().toISOString(),
+                    };
+
+                    this.projects.unshift(newProject);
+                    this.save();
+                    this.render();
+                    (e.target as HTMLFormElement).reset();
+                    uploadSection?.classList.add("hidden");
+                });
+            }
+
+            save() {
+                localStorage.setItem(
+                    this.storageKey,
+                    JSON.stringify(this.projects),
                 );
             }
-        }
 
-        render() {
-            const gallery = document.querySelector(
-                `div[data-category="${this.category}"] #gallery`,
-            );
-            if (!gallery) return;
-
-            if (this.projects.length === 0) {
-                gallery.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400">No projects yet. Upload one!</div>`;
-                return;
+            delete(id: string) {
+                this.projects = this.projects.filter((p) => p.id !== id);
+                this.save();
+                this.render();
+                // Re-render delete list if visible, but simple render() handles gallery
+                const deleteSection = document.querySelector(
+                    `div[data-category="${this.category}"] #delete-section`,
+                );
+                if (!deleteSection?.classList.contains("hidden")) {
+                    this.renderDeleteList(
+                        document.querySelector(
+                            `div[data-category="${this.category}"]`,
+                        )!,
+                    );
+                }
             }
 
-            gallery.innerHTML = this.projects
-                .map(
-                    (p) => `
-        <div class="border border-gray-200 dark:border-zinc-800 p-6 rounded-lg">
-          <div class="mb-4 rounded overflow-hidden bg-gray-100 dark:bg-zinc-800 aspect-video flex items-center justify-center">
+            openModal(project: any) {
+                const container = document.querySelector(
+                    `div[data-category="${this.category}"]`,
+                );
+                const modal = container?.querySelector("#project-modal");
+                const mediaContainer = container?.querySelector("#modal-media");
+                const desc = container?.querySelector("#modal-description");
+
+                if (!modal || !mediaContainer || !desc) return;
+
+                if (project.type === "video") {
+                    mediaContainer.innerHTML = `<iframe src="${project.url}" class="w-full h-full aspect-video" frameborder="0" allowfullscreen></iframe>`;
+                } else {
+                    mediaContainer.innerHTML = `<img src="${project.url}" class="max-w-full max-h-[70vh] object-contain shadow-lg" alt="Project Detail" />`;
+                }
+
+                desc.textContent = project.description;
+                modal.classList.remove("hidden");
+            }
+
+            render() {
+                const gallery = document.querySelector(
+                    `div[data-category="${this.category}"] #gallery`,
+                );
+                if (!gallery) return;
+
+                if (this.projects.length === 0) {
+                    gallery.innerHTML = `<div class="col-span-full text-center py-10 text-gray-400">No projects yet. Upload one!</div>`;
+                    return;
+                }
+
+                gallery.innerHTML = this.projects
+                    .map(
+                        (p) => `
+        <div class="project-card border border-gray-200 dark:border-zinc-800 p-6 rounded-lg cursor-pointer hover:border-blue-500 transition-colors group" data-id="${p.id}">
+          <div class="mb-4 rounded overflow-hidden bg-gray-100 dark:bg-zinc-800 aspect-video flex items-center justify-center relative">
+             <div class="absolute inset-0 bg-black/0 group-hover:bg-black/10 transition-colors z-10 flex items-center justify-center">
+                 <span class="opacity-0 group-hover:opacity-100 bg-white text-black px-3 py-1 rounded-full text-sm font-medium shadow-md transition-opacity">View</span>
+             </div>
             ${
                 p.type === "video"
-                    ? `<iframe src="${p.url}" class="w-full h-full" frameborder="0" allowfullscreen></iframe>`
+                    ? `<div class="w-full h-full flex items-center justify-center bg-zinc-900 text-white"><svg class="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg></div>`
                     : `<img src="${p.url}" alt="Project" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/600x400?text=Invalid+Image'"/>`
             }
           </div>
-          <p class="text-gray-600 dark:text-gray-400 whitespace-pre-wrap">${p.description}</p>
+          <p class="text-gray-600 dark:text-gray-400 whitespace-pre-wrap line-clamp-3">${p.description}</p>
         </div>
       `,
-                )
-                .join("");
-        }
+                    )
+                    .join("");
 
-        renderDeleteList(container: Element) {
-            const list = container.querySelector("#delete-list");
-            if (!list) return;
-
-            if (this.projects.length === 0) {
-                list.innerHTML =
-                    '<div class="text-gray-500">Nothing to delete.</div>';
-                return;
+                // Attach click events for modal
+                gallery.querySelectorAll(".project-card").forEach((card) => {
+                    card.addEventListener("click", () => {
+                        const id = card.getAttribute("data-id");
+                        const project = this.projects.find((p) => p.id === id);
+                        if (project) this.openModal(project);
+                    });
+                });
             }
 
-            list.innerHTML = this.projects
-                .map(
-                    (p) => `
+            renderDeleteList(container: Element) {
+                const list = container.querySelector("#delete-list");
+                if (!list) return;
+
+                if (this.projects.length === 0) {
+                    list.innerHTML =
+                        '<div class="text-gray-500">Nothing to delete.</div>';
+                    return;
+                }
+
+                list.innerHTML = this.projects
+                    .map(
+                        (p) => `
         <div class="flex justify-between items-center bg-white dark:bg-zinc-800 p-3 rounded border border-gray-200 dark:border-zinc-700">
           <span class="truncate pr-4">${p.description.substring(0, 50)}...</span>
           <button class="delete-btn text-red-500 hover:text-red-700 font-bold px-2" data-id="${p.id}">
@@ -230,23 +325,26 @@ const { category, title } = Astro.props;
           </button>
         </div>
       `,
-                )
-                .join("");
+                    )
+                    .join("");
 
-            // Attach events
-            list.querySelectorAll(".delete-btn").forEach((btn) => {
-                btn.addEventListener("click", (e) => {
-                    const id = (e.target as Element).getAttribute("data-id");
-                    if (id && confirm("Delete this project?")) {
-                        this.delete(id);
-                    }
+                // Attach events
+                list.querySelectorAll(".delete-btn").forEach((btn) => {
+                    btn.addEventListener("click", (e) => {
+                        const id = (e.target as Element).getAttribute(
+                            "data-id",
+                        );
+                        if (id && confirm("Delete this project?")) {
+                            this.delete(id);
+                        }
+                    });
                 });
-            });
+            }
         }
-    }
 
-    // Initialize per category
-    document.querySelectorAll(".project-manager").forEach((el) => {
-        new ProjectManager(el);
-    });
-</script>
+        // Initialize per category
+        document.querySelectorAll(".project-manager").forEach((el) => {
+            new ProjectManager(el);
+        });
+    </script>
+</div>
